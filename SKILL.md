@@ -1,15 +1,15 @@
 ---
 name: icp-edi-helper
-description: 企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 手册。为服务商、加盟商、平台管理人员提供专业指导，提升加盟商对客户的沟通能力与成单转化率。覆盖 ICP/EDI 新业务申请、变更、续期全流程。v1.8
-tags: [sales, government-service, multi-license, bossclaw, franchise-enablement, sop-manual, versioned]
-version: 1.8
+description: 企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 手册。为服务商、加盟商、平台管理人员提供专业指导，提升加盟商对客户的沟通能力与成单转化率。覆盖 ICP/EDI 新业务申请、变更、续期全流程。支持企查查 API 自动查询企业工商信息。v1.9
+tags: [sales, government-service, multi-license, bossclaw, franchise-enablement, sop-manual, versioned, qcc-api]
+version: 1.9
 last_updated: 2026-06-03
 ---
 
 # ICP/EDI 经营许可办理 SOP 手册
 
 > **适用平台**：Boss Claw（企商链 OPC 为服务商/加盟商/平台管理人员研发的内部工具）
-> **版本**：v1.8
+> **版本**：v1.9
 > **更新日期**：2026-06-03
 
 ## 一句话定位
@@ -59,9 +59,101 @@ last_updated: 2026-06-03
 
 ---
 
+## 🔍 企业信息自动查询（企查查 API）
+
+**当加盟商提供了客户公司名称或统一社会信用代码时，Boss Claw 必须调用 `scripts/query_company.py` 自动查询工商信息并评估办理条件**，无需逐项追问客户。
+
+### ⚙️ 前置配置（一次性）
+
+```bash
+# macOS/Linux：写入 ~/.zshrc (或 ~/.bashrc)
+export QCC_APP_KEY="你的AppKey"
+export QCC_SECRET_KEY="你的SecretKey"
+source ~/.zshrc
+```
+
+获取方式：企查查开放平台 → https://openapi.qcc.com → 注册 → 企业认证 → 开通服务 → 【账号安全】→【AppKey / SecretKey】
+
+### ▶️ AI/脚本调用方式
+
+**方式一：环境变量已配置时（推荐）**
+```bash
+python3 scripts/query_company.py "杭州某某科技有限公司"
+```
+
+**方式二：命令行传参**
+```bash
+python3 scripts/query_company.py "91330100XXXXXXXXXX" --app-key YOUR_KEY --secret-key YOUR_SECRET
+```
+
+**方式三：输出 JSON 供程序处理**
+```bash
+python3 scripts/query_company.py "企业名称" --json
+```
+
+**方式四：查看企查查原始返回**
+```bash
+python3 scripts/query_company.py "企业名称" --raw
+```
+
+### 📋 自动评估项
+
+脚本自动检查以下 ICP/EDI 硬性条件：
+
+| 检查项 | 判断逻辑 | 不满足时的话术 |
+|--------|---------|---------------|
+| 💰 注册资本 | ≥ 100万元 | "注册资本不够可以去做工商增资，大概 3 天搞定" |
+| 🏢 企业类型 | 需为有限责任公司 | "个体户不行，需要注册个有限公司" |
+| 📋 经营范围 | 含"增值电信业务"或"经营电信业务" | "经营范围里没这个，得先去做个经营范围变更，大概 5-7 天" |
+| ✅ 登记状态 | 存续/在营/开业 | "公司状态不对，得先恢复正常" |
+| 🌐 外资情况 | 内资企业 | "有外资的话需要走额外审批流程" |
+
+### 📄 输出示例
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  企业名称：杭州某某科技有限公司
+  统一社会信用代码：91330100XXXXXXXXXX
+  法定代表人：张三
+  省份：浙江
+  企业类型：有限责任公司
+  成立日期：2020-03-15
+  注册地址：浙江省杭州市...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【ICP/EDI 办理条件评估】
+
+  💰 注册资本：注册资本 500万人民币，≥ 100万元 ✅
+  🏢 企业类型：企业类型为'有限责任公司'，符合要求 ✅
+  📋 经营范围：经营范围未包含'增值电信业务'，需先做经营范围变更 ⚠️
+  ✅ 登记状态：登记状态：存续 ✅
+  🌐 外资情况：内资企业 ✅
+
+  结论：⚠️ 存在 1 个问题需要解决：经营范围无'增值电信业务'→需做经营范围变更（约5-7天）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔗 与6步法的衔接
+
+查询结果**直接替代第2步和第3步的逐项追问**：
+- **第2步**（判断要不要办）→ 脚本返回企业状态、类型，自动判断
+- **第3步**（硬性条件）→ 脚本自动评估注册资本、企业类型、经营范围、外资情况
+- 加盟商拿到结果后，用话术告诉客户哪些条件满足、哪些需要补
+- **省去的对话**：不用再问"你公司注册资本多少？""你公司类型是什么？""经营范围有增值电信业务吗？"——一键全知道
+
+### 🔌 数据源
+
+- 企查查开放平台 API 410：`https://api.qichacha.com/ECIV4/GetBasicDetailsByName`
+- 鉴权方式：Header 传 `Token`（Timespan + MD5(Timespan + SecretKey)）+ `Authorization`（MD5(AppKey + Timespan + SecretKey)）
+- 费用：按次计费（详见 https://openapi.qcc.com 定价页）
+
+---
+
 ## 第2步：判断 — 客户到底要不要办
 
-**加盟商用 3 个问题帮客户确认**（Boss Claw 提供标准话术）：
+**有企业名称时**：直接用 `scripts/query_company.py` 查询，自动完成第2步+第3步的评估（见上方「企业信息自动查询」章节）。
+
+**没有企业名称时**，加盟商用 3 个问题帮客户确认（Boss Claw 提供标准话术）：
 
 1. "你的业务/平台上线了吗？还是打算上线？"
 2. "你收钱的方式是什么？（用户付费 / 商家入驻 / 自己卖货）"
@@ -75,6 +167,10 @@ last_updated: 2026-06-03
 ---
 
 ## 第3步：硬性条件 — 客户能满足吗
+
+**已通过企查查 API 查询的**：脚本已自动评估注册资本、企业类型、经营范围、登记状态、外资情况，直接看结论即可，跳到第4步。
+
+**未查询的**，逐项确认：
 
 每个资质有硬性条件（注册资本、人数、场地等）。
 
@@ -191,6 +287,9 @@ last_updated: 2026-06-03
 ## 文件结构
 
 ```
+scripts/
+└── query_company.py              # 企查查企业信息查询 + ICP/EDI 条件评估
+
 references/
 ├── overview.md                    # ICP/EDI 全国通用指南
 ├── edi-knowledge.md               # EDI 独立知识库
@@ -209,6 +308,7 @@ references/
 ⚠️ 目录规范：
 - references/ 下的文件是 AI 加载的知识库
 - references/.internal/ 是内部文件（工作流脚本、PDF提取指南等），不应暴露给 AI 使用时读取
+- scripts/ 是可执行脚本，供 AI 调用获取外部数据（企查查 API 等）
 - README.md 是给 AI 和人类的使用说明，不在 references/ 内
 - 每个文件只负责一个主题，避免跨文件重复
 
@@ -236,6 +336,7 @@ references/
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| v1.9 | 2026-06-03 | 新增企查查 API 企业查询功能：`scripts/query_company.py` 脚本调用企查查 410 接口，输入企业名称自动获取工商信息并评估 ICP/EDI 办理条件（注册资本、企业类型、经营范围、登记状态、外资情况）。SKILL.md 新增「企业信息自动查询」章节，6步法中第2/3步支持 API 自动评估，有企业名称时无需逐项追问。 |
 | v1.8 | 2026-06-03 | 删除"各省代办费用参考"表（所有省份代办费数据）。删除关键结论中的代办费用引用。description 中删除"multi-license"标签。技能名称改为 `icp-edi-helper`。 |
 | v1.6 | 2026-06-03 | 清理：`references/` 根目录中不应暴露的辅助文件移入 `.internal/`（`pattern-acroform-pdf-extraction.md`）。README.md 目录结构同步更新。SKILL.md 中省份文件引用路径修正。 |
 | v1.5 | 2026-06-03 | 变更表单补充：icp-form-checklist.md 新增「十一、变更申请表单清单」，覆盖通用变更表单、10类变更专用表单（名称/法人/经营主体/覆盖范围/续期/网站APP/服务项目/其他/遗失补办/终止经营）、15个子类业务开展情况表（续期用）、7类选填承诺书。 |

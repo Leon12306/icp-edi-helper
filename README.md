@@ -1,6 +1,6 @@
 # icp-edi-helper — ICP/EDI 经营许可办理 SOP 手册
 
-> **Boss Claw 内置能力** · 企商链 OPC 平台 · 版本 v1.8
+> **Boss Claw 内置能力** · 企商链 OPC 平台 · 版本 v1.9
 
 ## 这是什么
 
@@ -33,6 +33,7 @@ ICP许可证、EDI许可证、ICP备案、增值电信业务、ICP证、EDI证�
 2. 输入省份 → 获得该省办理入口和特殊要求
 3. 输入"要模板" → 获得可编辑的材料模板
 4. 输入"变更/续期/注销" → 获得对应流程和表单
+5. 输入客户公司名称 → 自动查企查查，评估办理条件
 ```
 
 ## 目录结构
@@ -41,6 +42,8 @@ ICP许可证、EDI许可证、ICP备案、增值电信业务、ICP证、EDI证�
 icp-edi-helper/
 ├── SKILL.md                      # 主流程 SOP（6步法）
 ├── README.md                     # 使用说明（本文件）
+├── scripts/
+│   └── query_company.py          # 企查查企业查询 + ICP/EDI 条件评估
 └── references/
     ├── overview.md               # ICP/EDI 全国通用指南
     ├── edi-knowledge.md          # EDI 独立知识库
@@ -64,6 +67,7 @@ icp-edi-helper/
 - 查官网电话 → `references/provincial-authorities.md`
 - 查表单字段 → `references/templates/icp-form-checklist.md`（新业务 + 变更）
 - 查材料模板 → `references/templates/icp-templates.md`
+- 查企业工商信息 → `scripts/query_company.py "企业名称"`
 
 ## 当前覆盖
 
@@ -76,11 +80,13 @@ icp-edi-helper/
 | 各省差异对照 | ✅ 完成 |
 | 各省官网+电话 | ✅ 完成 |
 | 关键词映射 | ✅ 完成 |
+| 企查查企业查询 | ✅ 完成 |
 
 ## 版本历史
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v1.9 | 2026-06-03 | 新增企查查 API 企业查询：`scripts/query_company.py`，输入公司名称自动评估 ICP/EDI 办理条件。 |
 | v1.8 | 2026-06-03 | 删除"各省代办费用参考"表，删除关键结论中的代办费用引用。技能名称改为 `icp-edi-helper`。 |
 | v1.7 | 2026-06-03 | 聚焦 ICP/EDI：删除其他 9 类资质占位行，标题和描述统一为 ICP/EDI 经营许可办理。 |
 | v1.6 | 2026-06-03 | 内部文件归拢：`pattern-acroform-pdf-extraction.md` 移入 `.internal/`。 |
