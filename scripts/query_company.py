@@ -102,15 +102,24 @@ def query_company(keyword: str, app_key: str, secret_key: str) -> Dict[str, Any]
     headers["Content-Type"] = "application/json"
     params = {"key": app_key, "keyword": keyword}
 
-    resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
-    resp.raise_for_status()
+    try:
+        resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return {"error": True, "message": f"API 请求失败：{e}", "reason": "network"}
+
     data = resp.json()
 
     # 企查查返回格式：{"Status": "200", "Result": {...}, ...}
     if data.get("Status") != "200":
-        return {"error": True, "message": data.get("Message", "查询失败"), "raw": data}
+        return {"error": True, "message": data.get("Message", "查询失败"), "reason": "api_error", "raw": data}
 
-    return data.get("Result", {})
+    result = data.get("Result")
+    # 无结果：名称不全、记错、或企业不存在
+    if not result or not result.get("Name"):
+        return {"error": True, "message": f"未查到 '{keyword}' 的工商信息，请确认企业名称是否完整准确", "reason": "not_found"}
+
+    return result
 
 
 def parse_capital_yuan(capital_str: str) -> Optional[float]:
@@ -341,9 +350,34 @@ def main():
     result = query_company(args.keyword, args.app_key, args.secret_key)
 
     if result.get("error"):
-        print(f"查询失败：{result.get('message', '未知错误')}", file=sys.stderr)
+        reason = result.get("reason", "unknown")
+        err_msg = result.get("message", "未知错误")
+
+        if args.json:
+            # JSON 模式：输出结构化错误，AI 可根据 reason 字段决策
+            print(json.dumps({
+                "error": True,
+                "reason": reason,
+                "message": err_msg,
+                "fallback_action": (
+                    "ask_full_name" if reason == "not_found"
+                    else "manual_step2" if reason == "network"
+                    else "manual_step2"
+                ),
+            }, ensure_ascii=False, indent=2))
+        else:
+            print(f"查询失败：{err_msg}", file=sys.stderr)
+
         if args.raw:
             print(json.dumps(result.get("raw", {}), ensure_ascii=False, indent=2))
+
+        # 非 JSON 模式下给出加盟商话术提示
+        if not args.json:
+            if reason == "not_found":
+                print("\n💡 加盟商话术：\"这个名字没查到，您方便发一下营业执照上的公司全称吗？或者统一社会信用代码也行。\"", file=sys.stderr)
+            else:
+                print("\n💡 加盟商话术：\"系统暂时查不了，我先按常规流程帮您梳理——您公司注册资本大概多少？是什么类型？\"", file=sys.stderr)
+
         sys.exit(1)
 
     # 原始输出
