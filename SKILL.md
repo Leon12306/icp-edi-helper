@@ -63,38 +63,19 @@ last_updated: 2026-06-04
 
 **当加盟商提供了客户公司名称或统一社会信用代码时，Boss Claw 必须调用 `scripts/query_company.py` 自动查询工商信息并评估办理条件**，无需逐项追问客户。
 
-### ⚙️ 前置配置（一次性，三选一）
+### ⚙️ 前置配置（一次性）
 
-**方式 A：项目根目录 `.env` 文件（推荐）**
 ```bash
 cp .env.example .env
-# 编辑 .env，填入真实密钥
-```
-脚本自动读取项目根目录的 `.env`，无需修改系统配置。
-
-**方式 B：系统环境变量**
-```bash
-# macOS/Linux：写入 ~/.zshrc (或 ~/.bashrc)
-export QCC_APP_KEY="你的AppKey"
-export QCC_SECRET_KEY="你的SecretKey"
-source ~/.zshrc
+# 编辑 .env，填入企查查 AppKey 和 SecretKey
 ```
 
-**方式 C：命令行传参**（每次调用都需带）
-```bash
-python3 scripts/query_company.py "企业名" --app-key KEY --secret-key SECRET
-```
+> ⚠️ `.env` 已加入 `.gitignore`，不会被提交。
 
-获取方式：企查查开放平台 → https://openapi.qcc.com → 注册 → 企业认证 → 开通服务 → 【账号安全】→【AppKey / SecretKey】
-
-> ⚠️ `.env` 已加入 `.gitignore`，不会被提交。密钥优先级：命令行 > 环境变量 > `.env`。
-
-### ▶️ AI/脚本调用方式
-
-密钥已通过 `.env` / 环境变量配置后，直接调用：
+### ▶️ 调用方式
 
 ```bash
-# 基本查询（人类可读输出）
+# 基本查询
 python3 scripts/query_company.py "杭州某某科技有限公司"
 
 # 输出 JSON 供程序处理
