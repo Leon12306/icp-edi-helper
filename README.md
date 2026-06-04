@@ -2,6 +2,25 @@
 
 > **Boss Claw 内置能力** · 企商链 OPC 平台 · 版本 v2.0
 
+## 安装（OpenClaw）
+
+```bash
+# 从 GitHub 安装
+openclaw skill install Leon12306/icp-edi-helper
+
+# 或手动克隆
+git clone https://github.com/Leon12306/icp-edi-helper.git ~/.openclaw/skills/icp-edi-helper
+```
+
+**前置配置：**
+```bash
+cd ~/.openclaw/skills/icp-edi-helper
+cp .env.example .env
+# 编辑 .env，填入企查查 AppKey 和 SecretKey
+```
+
+> 海外服务器需额外配置 `QCC_RELAY_URL`（SCF 中继地址），详见 `.env.example`。
+
 ## 这是什么
 
 一个给 **Boss Claw** 平台内置的 ICP/EDI 经营许可办理 SOP 手册。让加盟商即使不懂企服行业，也能像资深服务商一样指导客户办理 ICP 或 EDI 许可证。
