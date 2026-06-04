@@ -11,7 +11,11 @@
 密钥配置（按优先级）：
   1. 命令行参数 --app-key / --secret-key
   2. 系统环境变量 QCC_APP_KEY / QCC_SECRET_KEY
-  3. 项目根目录 .env 文件（QCC_APP_KEY=xxx / QCC_SECRET_KEY=xxx）
+  3. 项目根目录 .env 文件
+
+海外部署（数据不能出境）：
+  设置 QCC_RELAY_URL 环境变量或 --relay-url 参数指向国内 SCF 中继地址
+  脚本会自动通过中继转发请求，无需直接访问企查查
 """
 
 import argparse
@@ -96,8 +100,13 @@ def make_auth_headers(app_key: str, secret_key: str) -> Dict[str, str]:
     }
 
 
-def query_company(keyword: str, app_key: str, secret_key: str) -> Dict[str, Any]:
-    """调用企查查 API 查询企业工商信息"""
+def query_company(keyword: str, app_key: str, secret_key: str, relay_url: str = "") -> Dict[str, Any]:
+    """调用企查查 API 查询企业工商信息。
+    如果设置了 relay_url，则通过国内 SCF 中继转发（解决海外数据不能出境问题）。
+    """
+    if relay_url:
+        return _query_via_relay(keyword, relay_url)
+
     headers = make_auth_headers(app_key, secret_key)
     headers["Content-Type"] = "application/json"
     params = {"key": app_key, "keyword": keyword}
@@ -108,14 +117,30 @@ def query_company(keyword: str, app_key: str, secret_key: str) -> Dict[str, Any]
     except requests.exceptions.RequestException as e:
         return {"error": True, "message": f"API 请求失败：{e}", "reason": "network"}
 
-    data = resp.json()
+    return _parse_response(resp.json(), keyword)
 
-    # 企查查返回格式：{"Status": "200", "Result": {...}, ...}
+
+def _query_via_relay(keyword: str, relay_url: str) -> Dict[str, Any]:
+    """通过国内 SCF 中继转发请求"""
+    try:
+        resp = requests.get(
+            relay_url.rstrip("/") + "/",
+            params={"keyword": keyword},
+            timeout=15,
+        )
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return {"error": True, "message": f"中继请求失败：{e}", "reason": "network"}
+
+    return _parse_response(resp.json(), keyword)
+
+
+def _parse_response(data: dict, keyword: str) -> Dict[str, Any]:
+    """解析企查查响应（直连和 relay 返回格式一致）"""
     if data.get("Status") != "200":
         return {"error": True, "message": data.get("Message", "查询失败"), "reason": "api_error", "raw": data}
 
     result = data.get("Result")
-    # 无结果：名称不全、记错、或企业不存在
     if not result or not result.get("Name"):
         return {"error": True, "message": f"未查到 '{keyword}' 的工商信息，请确认企业名称是否完整准确", "reason": "not_found"}
 
@@ -337,17 +362,21 @@ def main():
                         help="企查查 AppKey（优先级：命令行 > 环境变量 > .env）")
     parser.add_argument("--secret-key", default=os.environ.get("QCC_SECRET_KEY") or dotenv_vars.get("QCC_SECRET_KEY", ""),
                         help="企查查 SecretKey（优先级：命令行 > 环境变量 > .env）")
+    parser.add_argument("--relay-url", default=os.environ.get("QCC_RELAY_URL") or dotenv_vars.get("QCC_RELAY_URL", ""),
+                        help="国内 SCF 中继地址（海外部署必填，解决数据不能出境）")
     parser.add_argument("--raw", action="store_true", help="输出企查查原始返回（不评估）")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出评估结果")
 
     args = parser.parse_args()
 
     if not args.app_key or not args.secret_key:
-        print("错误：需要企查查 API 密钥。通过 --app-key/--secret-key 参数或 QCC_APP_KEY/QCC_SECRET_KEY 环境变量传入。", file=sys.stderr)
-        sys.exit(1)
+        if not args.relay_url:
+            print("错误：需要企查查 API 密钥，或设置 QCC_RELAY_URL 走国内中继。", file=sys.stderr)
+            sys.exit(1)
+        # 走 relay 模式，本地不需要密钥
 
     # 查询
-    result = query_company(args.keyword, args.app_key, args.secret_key)
+    result = query_company(args.keyword, args.app_key, args.secret_key, relay_url=args.relay_url)
 
     if result.get("error"):
         reason = result.get("reason", "unknown")
