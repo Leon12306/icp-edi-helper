@@ -102,11 +102,22 @@ def make_auth_headers(app_key: str, secret_key: str) -> Dict[str, str]:
 
 def query_company(keyword: str, app_key: str, secret_key: str, relay_url: str = "") -> Dict[str, Any]:
     """调用企查查 API 查询企业工商信息。
-    如果设置了 relay_url，则通过国内 SCF 中继转发（解决海外数据不能出境问题）。
+    先尝试直连；如果失败且有 relay_url，自动退回国内 SCF 中继（解决海外数据不能出境）。
     """
-    if relay_url:
-        return _query_via_relay(keyword, relay_url)
+    # 1) 先尝试直连
+    result = _query_direct(keyword, app_key, secret_key)
 
+    # 2) 直连成功或未配 relay，直接返回
+    if not result.get("error") or not relay_url:
+        return result
+
+    # 3) 直连失败 + 有 relay → 自动退回中继
+    relay_result = _query_via_relay(keyword, relay_url)
+    return relay_result if not relay_result.get("error") else result
+
+
+def _query_direct(keyword: str, app_key: str, secret_key: str) -> Dict[str, Any]:
+    """直连企查查 API"""
     headers = make_auth_headers(app_key, secret_key)
     headers["Content-Type"] = "application/json"
     params = {"key": app_key, "keyword": keyword}
@@ -115,7 +126,7 @@ def query_company(keyword: str, app_key: str, secret_key: str, relay_url: str = 
         resp = requests.get(API_URL, headers=headers, params=params, timeout=15)
         resp.raise_for_status()
     except requests.exceptions.RequestException as e:
-        return {"error": True, "message": f"API 请求失败：{e}", "reason": "network"}
+        return {"error": True, "message": f"直连企查查失败：{e}", "reason": "network"}
 
     return _parse_response(resp.json(), keyword)
 
