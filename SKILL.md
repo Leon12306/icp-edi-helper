@@ -1,6 +1,6 @@
 ---
 name: icp-edi-helper
-description: 企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 手册。为服务商、加盟商、平台管理人员提供专业指导，提升加盟商对客户的沟通能力与成单转化率。覆盖 ICP/EDI 新业务申请、变更、续期全流程。支持企查查 API 自动查询企业工商信息。v2.0
+description: Use when franchisees or service providers need to guide clients through ICP/EDI license applications, handle renewals/changes/cancellations, look up company registration info via Qichacha API, or find province-specific filing procedures. Triggered by mentions of ICP许可证, EDI许可证, 增值电信业务, 经营性网站, 平台入驻资质, or 企查查企业查询.
 tags: [sales, government-service, multi-license, bossclaw, franchise-enablement, sop-manual, versioned, qcc-api]
 version: 2.0
 last_updated: 2026-06-04
