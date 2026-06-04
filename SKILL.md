@@ -1,16 +1,16 @@
 ---
 name: icp-edi-helper
-description: 企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 手册。为服务商、加盟商、平台管理人员提供专业指导，提升加盟商对客户的沟通能力与成单转化率。覆盖 ICP/EDI 新业务申请、变更、续期全流程。支持企查查 API 自动查询企业工商信息。v1.9
+description: 企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 手册。为服务商、加盟商、平台管理人员提供专业指导，提升加盟商对客户的沟通能力与成单转化率。覆盖 ICP/EDI 新业务申请、变更、续期全流程。支持企查查 API 自动查询企业工商信息。v2.0
 tags: [sales, government-service, multi-license, bossclaw, franchise-enablement, sop-manual, versioned, qcc-api]
-version: 1.9
-last_updated: 2026-06-03
+version: 2.0
+last_updated: 2026-06-04
 ---
 
 # ICP/EDI 经营许可办理 SOP 手册
 
 > **适用平台**：Boss Claw（企商链 OPC 为服务商/加盟商/平台管理人员研发的内部工具）
-> **版本**：v1.9
-> **更新日期**：2026-06-03
+> **版本**：v2.0
+> **更新日期**：2026-06-04
 
 ## 一句话定位
 
@@ -63,8 +63,16 @@ last_updated: 2026-06-03
 
 **当加盟商提供了客户公司名称或统一社会信用代码时，Boss Claw 必须调用 `scripts/query_company.py` 自动查询工商信息并评估办理条件**，无需逐项追问客户。
 
-### ⚙️ 前置配置（一次性）
+### ⚙️ 前置配置（一次性，三选一）
 
+**方式 A：项目根目录 `.env` 文件（推荐）**
+```bash
+cp .env.example .env
+# 编辑 .env，填入真实密钥
+```
+脚本自动读取项目根目录的 `.env`，无需修改系统配置。
+
+**方式 B：系统环境变量**
 ```bash
 # macOS/Linux：写入 ~/.zshrc (或 ~/.bashrc)
 export QCC_APP_KEY="你的AppKey"
@@ -72,27 +80,27 @@ export QCC_SECRET_KEY="你的SecretKey"
 source ~/.zshrc
 ```
 
+**方式 C：命令行传参**（每次调用都需带）
+```bash
+python3 scripts/query_company.py "企业名" --app-key KEY --secret-key SECRET
+```
+
 获取方式：企查查开放平台 → https://openapi.qcc.com → 注册 → 企业认证 → 开通服务 → 【账号安全】→【AppKey / SecretKey】
+
+> ⚠️ `.env` 已加入 `.gitignore`，不会被提交。密钥优先级：命令行 > 环境变量 > `.env`。
 
 ### ▶️ AI/脚本调用方式
 
-**方式一：环境变量已配置时（推荐）**
+密钥已通过 `.env` / 环境变量配置后，直接调用：
+
 ```bash
+# 基本查询（人类可读输出）
 python3 scripts/query_company.py "杭州某某科技有限公司"
-```
 
-**方式二：命令行传参**
-```bash
-python3 scripts/query_company.py "91330100XXXXXXXXXX" --app-key YOUR_KEY --secret-key YOUR_SECRET
-```
-
-**方式三：输出 JSON 供程序处理**
-```bash
+# 输出 JSON 供程序处理
 python3 scripts/query_company.py "企业名称" --json
-```
 
-**方式四：查看企查查原始返回**
-```bash
+# 查看企查查原始返回（调试用）
 python3 scripts/query_company.py "企业名称" --raw
 ```
 
@@ -106,7 +114,9 @@ python3 scripts/query_company.py "企业名称" --raw
 | 🏢 企业类型 | 需为有限责任公司 | "个体户不行，需要注册个有限公司" |
 | 📋 经营范围 | 含"增值电信业务"或"经营电信业务" | "经营范围里没这个，得先去做个经营范围变更，大概 5-7 天" |
 | ✅ 登记状态 | 存续/在营/开业 | "公司状态不对，得先恢复正常" |
-| 🌐 外资情况 | 内资企业 | "有外资的话需要走额外审批流程" |
+| 🌐 外资情况 | 内资企业（试点省份外资可达100%） | 非试点省份："有外资的话需要走额外审批流程"<br>北京/上海/浙江/海南："外资ICP可达100%，正常办理" |
+
+> ⚠️ **API 无法自动检查的项**（加盟商需人工追问）：① 3名员工近1个月社保、② 域名在公司名下且剩余≥6个月、③ 已完成ICP备案、④ 网站有完整功能页面。这些在第3步逐项确认。
 
 ### 📄 输出示例
 
@@ -144,8 +154,10 @@ python3 scripts/query_company.py "企业名称" --raw
 ### 🔌 数据源
 
 - 企查查开放平台 API 410：`https://api.qichacha.com/ECIV4/GetBasicDetailsByName`
-- 鉴权方式：Header 传 `Token`（Timespan + MD5(Timespan + SecretKey)）+ `Authorization`（MD5(AppKey + Timespan + SecretKey)）
+- 请求参数：`?key={AppKey}&keyword={企业名称或信用代码}`
+- 鉴权方式：Header 传 `Token`（MD5(AppKey + Timespan + SecretKey).upper()）+ `Timespan`（秒级Unix时间戳）。无 Authorization header。
 - 费用：按次计费（详见 https://openapi.qcc.com 定价页）
+- 返回字段：Name（企业名称）、RegistCapi（注册资本）、EconKind（企业类型）、Scope（经营范围）、Status（登记状态）、Province（省份）、OperName（法人）、CreditCode（统一社会信用代码）、Address（注册地址）、StartDate（成立日期）
 
 ---
 
@@ -159,10 +171,28 @@ python3 scripts/query_company.py "企业名称" --raw
 2. "你收钱的方式是什么？（用户付费 / 商家入驻 / 自己卖货）"
 3. "你的公司注册在哪里？注册资本大概多少？"
 
-根据回答给出结论：
-- ✅ **需要办** → 加盟商继续第3步
-- ❌ **不需要办** → 加盟商告知客户原因
-- ⚠️ **需要换个证** → 重新匹配
+根据回答给出结论和对应话术：
+
+#### ✅ 需要办 → 加盟商继续第3步
+
+**加盟商话术：**
+> "根据您说的情况，您这个业务需要办 [ICP许可证 / EDI许可证]。这是国家的硬性要求，不办的话可能会被罚款10-100万。我帮您梳理一下您的公司能不能满足基本条件，满足不了也没关系，我帮您想办法。"
+
+**关键点**：不要让客户觉得"又多了一件事"，而是传递"我帮你搞定"的信号。
+
+#### ❌ 不需要办 → 加盟商告知客户原因
+
+**加盟商话术：**
+> "根据您说的情况，您目前不需要办这个证。比如您是自己卖自己的商品，只需要做个 ICP 备案就行，免费的。不过如果以后想开放让商家入驻，到时候就需要办了，到时您再找我。"
+
+**关键点**：即使这次不需要，也要留个钩子，让客户以后有需求时想起你。
+
+#### ⚠️ 需要换个证 → 重新匹配
+
+**加盟商话术：**
+> "您刚才说的这个业务，实际上不是办 ICP 证，而是需要办 [EDI许可证]。这两个证容易搞混——ICP 是内容/信息服务收费用的，EDI 是平台让商家入驻卖货用的。我帮您重新看看需要准备什么材料。"
+
+**关键点**：纠正客户时不带否定感，体现专业度，让客户觉得"这人真懂"。
 
 ---
 
@@ -336,8 +366,10 @@ references/
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| v2.0 | 2026-06-04 | 质量治理：① 内容去重 — edi-knowledge.md 硬性条件、licensing-changes.md 年报要求、31省受理条件全部改为跨文件引用 overview.md；② 聚焦 ICP/EDI — license-keyword-map.md 删除6类无关资质（食品/医疗/文网文/出版物/人力资源/交通），只保留12条ICP/EDI映射；③ 话术补全 — 第2步新增需要办/不需要办/换证三种分支的标准加盟商话术+关键点提示；④ 外资试点 — beijing.md、hainan.md 补充外资政策章节，企查查脚本新增试点省份外资100%可达判断；⑤ 企查查增强 — 自动评估表标注API检查范围，补充请求参数文档。 |
 | v1.9 | 2026-06-03 | 新增企查查 API 企业查询功能：`scripts/query_company.py` 脚本调用企查查 410 接口，输入企业名称自动获取工商信息并评估 ICP/EDI 办理条件（注册资本、企业类型、经营范围、登记状态、外资情况）。SKILL.md 新增「企业信息自动查询」章节，6步法中第2/3步支持 API 自动评估，有企业名称时无需逐项追问。 |
 | v1.8 | 2026-06-03 | 删除"各省代办费用参考"表（所有省份代办费数据）。删除关键结论中的代办费用引用。description 中删除"multi-license"标签。技能名称改为 `icp-edi-helper`。 |
+| v1.7 | 2026-06-03 | 聚焦 ICP/EDI：删除 SKILL.md 和 README.md 中其他 9 类资质占位行（食品、医疗、文化、出版物、人力资源等），标题和描述统一为 ICP/EDI 经营许可办理。license-keyword-map.md 清理非 ICP/EDI 资质类别。 |
 | v1.6 | 2026-06-03 | 清理：`references/` 根目录中不应暴露的辅助文件移入 `.internal/`（`pattern-acroform-pdf-extraction.md`）。README.md 目录结构同步更新。SKILL.md 中省份文件引用路径修正。 |
 | v1.5 | 2026-06-03 | 变更表单补充：icp-form-checklist.md 新增「十一、变更申请表单清单」，覆盖通用变更表单、10类变更专用表单（名称/法人/经营主体/覆盖范围/续期/网站APP/服务项目/其他/遗失补办/终止经营）、15个子类业务开展情况表（续期用）、7类选填承诺书。 |
 | v1.4 | 2026-06-03 | 新增 icp-form-checklist.md：基于工信部政务服务平台 27 页在线表单完整提取，覆盖通用表单、人员情况表、安全措施、股东追溯、ICP/EDI 专用表单全部字段。 |

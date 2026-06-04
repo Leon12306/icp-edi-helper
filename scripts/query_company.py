@@ -5,12 +5,13 @@
 用途：根据企业名称或统一社会信用代码查询工商信息，自动评估 ICP/EDI 许可证办理条件
 
 鉴权方式：
-  Header Token: Timespan + MD5(Timespan + SecretKey)
-  Header Authorization: MD5(AppKey + Timespan + SecretKey)
+  Header Token: MD5(AppKey + Timespan + SecretKey).upper()
+  Header Timespan: Unix时间戳（秒）
 
-环境变量（二选一）：
-  QCC_APP_KEY / QCC_SECRET_KEY  — 企查查开放平台密钥对
-  或通过命令行参数 --app-key / --secret-key 传入
+密钥配置（按优先级）：
+  1. 命令行参数 --app-key / --secret-key
+  2. 系统环境变量 QCC_APP_KEY / QCC_SECRET_KEY
+  3. 项目根目录 .env 文件（QCC_APP_KEY=xxx / QCC_SECRET_KEY=xxx）
 """
 
 import argparse
@@ -21,6 +22,7 @@ import re
 import sys
 import time
 
+from pathlib import Path
 from typing import Optional, Dict, List, Any
 
 try:
@@ -28,6 +30,26 @@ try:
 except ImportError:
     print("需要 requests 库：pip3 install requests", file=sys.stderr)
     sys.exit(1)
+
+
+def load_dotenv() -> Dict[str, str]:
+    """从项目根目录 .env 文件加载环境变量（不覆盖已有的环境变量）"""
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if not env_file.exists():
+        return {}
+    loaded = {}
+    with open(env_file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, _, value = line.partition("=")
+                key, value = key.strip(), value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    loaded[key] = value
+    return loaded
+
 
 API_URL = "https://api.qichacha.com/ECIV4/GetBasicDetailsByName"
 
@@ -52,15 +74,25 @@ REQUIRED_SCOPE_KEYWORDS = [
     "电信业务",
 ]
 
+# 增值电信业务扩大对外开放试点省份（2024年10月起，外资ICP可达100%）
+FOREIGN_PILOT_PROVINCES = {
+    "北京", "上海", "浙江", "海南",
+}
+
 
 def make_auth_headers(app_key: str, secret_key: str) -> Dict[str, str]:
-    """生成企查查 API 鉴权 Header"""
+    """生成企查查 API 鉴权 Header
+
+    正确的鉴权方式（经实测验证）：
+    - Token header = MD5(AppKey + Timespan + SecretKey).upper()
+    - Timespan header = 秒级Unix时间戳
+    - 不使用 Authorization header
+    """
     timespan = str(int(time.time()))
-    token_val = timespan + hashlib.md5((timespan + secret_key).encode("utf-8")).hexdigest()
-    auth_val = hashlib.md5((app_key + timespan + secret_key).encode("utf-8")).hexdigest()
+    token_val = hashlib.md5((app_key + timespan + secret_key).encode("utf-8")).hexdigest().upper()
     return {
         "Token": token_val,
-        "Authorization": auth_val,
+        "Timespan": timespan,
     }
 
 
@@ -216,19 +248,31 @@ def evaluate_icp_edi(result: Dict[str, Any]) -> Dict[str, Any]:
     scope_check = check_scope(scope)
     status_check = check_registration_status(status)
 
-    # 外资判断（简化：EntType=0 为大陆企业，其他可能有外资风险）
-    foreign_check = {
-        "is_domestic": ent_type in ("0", ""),
-        "suggestion": (
-            "内资企业 ✅"
-            if ent_type == "0"
-            else (
-                f"企业性质 EntType={ent_type}，如有外资控股需走额外审批 ⚠️"
-                if ent_type not in ("0", "")
-                else "企业性质未知，需确认是否有外资 ⚠️"
+    # 外资判断：优先看 EconKind 字段，EntType 不可靠（台港澳独资也返回0）
+    foreign_keywords = ["外资", "外商", "港澳台", "台港澳", "港澳", "外国", "境外"]
+    is_foreign = any(kw in econ_kind for kw in foreign_keywords) if econ_kind else False
+    is_pilot = province in FOREIGN_PILOT_PROVINCES
+
+    if is_foreign:
+        if is_pilot:
+            foreign_suggestion = (
+                f"涉及外资（{econ_kind}），但 {province} 是外资试点省份（2024.10起外资 ICP 可达 100%），正常流程办理 ✅"
             )
-        ),
+        else:
+            foreign_suggestion = (
+                f"涉及外资（{econ_kind}），需走外资审批流程（工信部外商投资审定 + 商务部备案） ⚠️"
+            )
+    else:
+        foreign_suggestion = "内资企业 ✅"
+
+    foreign_check = {
+        "is_domestic": not is_foreign,
+        "is_pilot_province": is_pilot,
+        "suggestion": foreign_suggestion,
     }
+
+    # 如果外资但在试点省份，视为通过（非阻塞）
+    foreign_ok = (not is_foreign) or (is_foreign and is_pilot)
 
     # 汇总
     all_passed = all([
@@ -236,7 +280,7 @@ def evaluate_icp_edi(result: Dict[str, Any]) -> Dict[str, Any]:
         type_check["is_qualified_type"] is True,
         scope_check["has_telecom_scope"] is True,
         status_check["is_active"] is True,
-        foreign_check["is_domestic"] is True,
+        foreign_ok,
     ])
 
     issues = []
@@ -248,8 +292,8 @@ def evaluate_icp_edi(result: Dict[str, Any]) -> Dict[str, Any]:
         issues.append("经营范围无'增值电信业务'→需做经营范围变更（约5-7天）")
     if status_check["is_active"] is not True:
         issues.append("企业状态异常→需先恢复正常状态")
-    if not foreign_check["is_domestic"]:
-        issues.append("可能涉及外资→需走外资审批流程")
+    if is_foreign and not is_pilot:
+        issues.append("涉及外资且非试点省份→需走外资审批流程")
 
     return {
         "company_name": name,
@@ -275,10 +319,15 @@ def evaluate_icp_edi(result: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def main():
+    # 1) 从 .env 加载（不覆盖已有环境变量）
+    dotenv_vars = load_dotenv()
+
     parser = argparse.ArgumentParser(description="查询企业工商信息，评估 ICP/EDI 许可证办理条件")
     parser.add_argument("keyword", help="企业名称或统一社会信用代码")
-    parser.add_argument("--app-key", default=os.environ.get("QCC_APP_KEY", ""), help="企查查 AppKey（或设环境变量 QCC_APP_KEY）")
-    parser.add_argument("--secret-key", default=os.environ.get("QCC_SECRET_KEY", ""), help="企查查 SecretKey（或设环境变量 QCC_SECRET_KEY）")
+    parser.add_argument("--app-key", default=os.environ.get("QCC_APP_KEY") or dotenv_vars.get("QCC_APP_KEY", ""),
+                        help="企查查 AppKey（优先级：命令行 > 环境变量 > .env）")
+    parser.add_argument("--secret-key", default=os.environ.get("QCC_SECRET_KEY") or dotenv_vars.get("QCC_SECRET_KEY", ""),
+                        help="企查查 SecretKey（优先级：命令行 > 环境变量 > .env）")
     parser.add_argument("--raw", action="store_true", help="输出企查查原始返回（不评估）")
     parser.add_argument("--json", action="store_true", help="以 JSON 格式输出评估结果")
 
