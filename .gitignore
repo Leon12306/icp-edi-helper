@@ -7,3 +7,10 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# 采集器临时调试文件
+check_yellow.py
+
+# 采集器输出（运行 `python3 scripts/fetch_province.py all` 时重新生成）
+province-fetcher/output/all_provinces.json
+province-fetcher/output/*.md

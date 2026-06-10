@@ -1,56 +1,111 @@
 # 政务网站批量采集与文档整理流程
 
+> **状态（v2.1，2026-06-08 更新）**：本流程已升级为 `province-fetcher/` 自动化采集器。本文件保留作为**白名单规则 + 兜底策略**的速查表。
+
 ## 触发场景
 
 需要对多个省份的政务服务机构（通信管理局、工信厅等）进行批量网页内容采集，并整理为结构化文档。
 
 ## 核心方法
 
-### 1. 获取各省官方地址列表
+### 1. 白名单（强制）
 
-- 来源页面：`https://www.miit.gov.cn/zzjg/index.html`（工信部组织机构页）
-- 备用来源：工信部政务服务系统的"联系我们"页面 `https://tsm.miit.gov.cn/dxxzsp/contact.jsp`
-- 结果：31个省份通信管理局的官网URL、电话、地址
-- 注意：西藏官网是 `xzca.miit.gov.cn`，宁夏官网是 `nxca.miit.gov.cn`，不走 `tjj.{省}.gov.cn` 规律
+**只接受工信部体系**（`miit.gov.cn`）下页面作为权威源。搜狐/顺企网/网易/今日头条/中帆/007swz/qq.com 等第三方转载一律不收。
 
-### 2. 分批次采集
+| 接受 | 拒绝 |
+|------|------|
+| `bjca.miit.gov.cn` | `sohu.com` `toutiao.com` `163.com` |
+| `ythzxfw.miit.gov.cn` | `11467.com`（顺企网） `trustexporter.com` |
+| `dxzhgl.miit.gov.cn` / `tsm.miit.gov.cn` | `51sole.com`（搜了网） `007swz.com` |
+| `jyhwzhq.miit.gov.cn`（集约化平台，PDF 附件托管） | `qq.com` `weibo.com` `douban.com` |
 
-每批4省，不要一次性全采。8批完成31省。
+详见 `province-fetcher/scripts/allowlist.py`。
 
-### 3. 网页抓取策略
+### 2. 候选 URL 构造
 
-**不要直接抓首页！** 各省政务网站首页通常是导航页，内容很少。
+各省份通管局页面路径通常符合以下模式（按命中率排序）：
 
-正确策略：
-1. `web_search` 搜索关键词：`{省份} 通信管理局 增值电信业务经营许可 首次申请 办事指南`
-2. 优先找具体办事指南 HTML 页面（`banshi.{省}.gov.cn/pubtask/task/...` 是最优源）
+```
+https://{short_domain}/bsfw/bszn/art/{year}/art_{hash}.html          # 办事指南
+https://{short_domain}/zwgk/dxgl/fwzlgl/art/{year}/art_{hash}.html  # 政务公开
+https://{short_domain}/bsfw/xzxk/art/{year}/art_{hash}.html         # 行政许可
+https://{short_domain}/xxgk/jgdj/art/{year}/art_{hash}.html         # 安徽表格清单
+http://{short_domain}/cms_files/filemanager/oldfile/.../*.pdf        # 上海/宁夏 PDF
+```
+
+`{short_domain}` 见 `province-fetcher/data/provinces_meta.json`（如 `bjca` / `tjca` / `gdca` / `shxca` / `qhca`）。
+
+### 3. 解析器兜底（7 层）
+
+| 差异类型 | 兜底方案 | 实现位置 |
+|---------|---------|---------|
+| 章节标题同义词 | `SECTION_SYNONYMS` | `fetcher.py` |
+| 章节标题含描述 | 冒号后内容作为首条 | `parse_section` |
+| 多段办结时限 | `parse_review_deadline` 17 个正则 | `REVIEW_PATTERNS` |
+| 材料列表混在标题段 | 跳过动作性标题，多章符合并 | `parse_numbered_list_items` |
+| 表格化"事项清单"页 | `parse_table_license_row` 提取 `申办材料/办理时限/收费标准` 列 | `fetcher.py` |
+| PDF 文本断行 | `fetch_pdf` 按"句末标点"合并续行 | `fetcher.py` |
+| 总览页检测 | `OVERVIEW_KEYWORDS` 触发告警 | `fetcher.py` |
+| 电话触发词多形态 | `PHONE_RE` 容忍 0-12 字符的标点/换行/&nbsp; 间隔 | `PHONE_RE` |
+
+### 4. 质量分级（强制）
+
+```bash
+python3 province-fetcher/scripts/grade.py
+```
+
+🟢 green — 条件≥3 + 材料≥3 + 时限 + 电话
+🟡 yellow — 条件≥3 + （材料≥1 或 时限）
+🟠 orange — 条件≥3 但材料=0 + 时限=0
+🔴 red — 条件=0 且 材料=0
+
+**当前分布（2026-06-08）**：🟢19 🟡5 🟠3 🔴2
+
+### 5. 5 黄 3 橙 2 红 = 真实数据缺口
+
+不是解析器问题，是源页本身没写：
+
+| 缺口 | 省 | 源页实际情况 |
+|------|----|------------|
+| 审查时限缺失 | 天津/西藏 | 源页只有 7 条件 + 10 材料 + 联系电话，无"X 日内作出" |
+| 咨询电话缺失 | 广东 | 源页无任何"电话/咨询"关键词 |
+| 材料清单缺失 | 海南/新疆 | 源页只引《42 号令》第八条，不展开列材料 |
+| 表格无条列 | 安徽 | "为企业办实事清单"表格"申请条件"列为空 |
+| 仅系统链接 | 山东 | 源页只列 7 条件+流程，材料全部指向 `tsm.miit.gov.cn` 系统 |
+| PDF 范围窄 | 上海 | PDF 只到"许可证申请条件"两段，无材料/时限/电话 |
+| 渝快办已 404 | 重庆 | 源页仅"渝快办"平台跳转，平台已 404 |
+| 总览页 | 青海 | 源页是"经营许可/码号/互联网管理" 3 业务简介 |
+
+### 6. 一致性校验（多省硬性条件对比）
+
+`province-fetcher/scripts/consistency.py` 检查 7 项：
+
+- 注册资本 100 万（省内）/ 1000 万（跨省）
+- 3 名员工 / 3 名负责人 社保
+- 域名证书要求
+- 公司法人代表
+- 外资股比（4 个试点：北京/上海/浙江/海南）
+- 等等
+
+出现矛盾 → 标 `conflict`，由人工确认。
+
+## 历史（旧版采集方法，2026-06-02 之前）
+
+> 此方法已被 `province-fetcher/` 取代。保留作为备查。
+
+旧版按以下步骤：
+1. `web_search` 关键词：`{省份} 通信管理局 增值电信业务经营许可 首次申请 办事指南`
+2. 优先 `banshi.{省}.gov.cn/pubtask/task/...` 页面（已废弃，迁移到 `miit.gov.cn`）
 3. `web_extract` 抓取具体办事指南页面
-4. 各省政务网站首页经常超时（tjj.*.gov.cn 普遍无法直接抓取），用第三方转载文章辅助
-5. 如果搜索不到具体页面，找工信部政务服务平台的各省入口页
+4. 各省政务网站首页经常超时（`tjj.*.gov.cn` 普遍无法直接抓取），用第三方转载文章辅助（**v2.1 已删除此策略，改用白名单**）
+5. 输出到 `~/work/icp-province-docs/`
 
-### 4. 文档输出结构
+**新方法（v2.1）已废弃 2/4/5 步骤**，全部走 `miit.gov.cn` 体系 + 自动化解析。
 
-每个省一个文件夹放 `guide.md`。文档包含：基本信息、受理条件、申请材料、办理流程、费用周期、特殊规定。
+## 7. 已采集完成的省份（2026-06-08）
 
-### 5. 各省差异重点
-
-**全国一致的硬性条件：** 注册资本≥100万、3人社保、域名在公司名下、先备案后办证。
-
-**各省材料差异（经采集确认）：**
-- 广东：要求公司章程 + 网站首页截图 + 服务器接入协议 + 建议省内服务器
-- 上海：多一个"企业服务云预审"环节，材料核对15日内
-- 北京：政务系统最规范，审核最严，承诺办结40工作日
-- 湖南：申请材料需仿宋三号字，A4纸单面打印
-- 广西：需提交纸质材料原件和复印件到政务中心
-- 浙江：代办费较高（约15,000元），审核严格
-- 社保要求：部分省份只要求1个月，部分要求连续3个月
-
-### 6. 注意事项
-
-- 各省官网可能无法直接抓取（超时/反爬），用第三方转载或搜索具体办事指南页是正常做法
-- 所有省份的在线申请入口统一为 `https://ythzxfw.miit.gov.cn`
-- 上海、北京、浙江、海南是外资ICP试点（100%外资可达）
-
-### 7. 已采集完成的省份（2026-06-02）
-
-全部31省已完成采集，文档存于 `~/work/icp-province-docs/`，索引见 `README.md`。
+- 29/31 省 `guide_url` 已填，剩河南/四川（官网动态加载/无独立页）
+- 19/29 省达到 🟢 绿色（条件≥3 + 材料≥3 + 时限 + 电话）
+- 元数据：`province-fetcher/data/provinces_meta.json`
+- 结果：`province-fetcher/output/all_provinces.json`
+- 详细说明：`province-fetcher/README.md`
