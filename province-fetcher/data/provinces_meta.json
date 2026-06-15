@@ -1,0 +1,336 @@
+{
+  "_comment": "31省通信管理局元数据。short_domain 必须是工信部体系（miit.gov.cn）下的通管局站点，main_entry 是统一的全国在线申请入口（工信部政务服务平台），market_entry 是电信业务市场综合管理信息系统。guide_url 在首次采集前留空，由采集脚本填充。",
+  "last_updated": "2026-06-05",
+  "provinces": [
+    {
+      "name_zh": "北京",
+      "pinyin": "beijing",
+      "short_domain": "bjca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://bjca.miit.gov.cn/zwgk/dxgl/fwzlgl/art/2024/art_854a0326705e41618c200e54f3bfbb3b.html",
+      "license_hotline": "010-51938038",
+      "pilot_foreign_100": true,
+      "_note": "北京指南页是外资扩大开放试点解读，含外资申请流程；内资申请请参考广东/湖南通用模板"
+    },
+    {
+      "name_zh": "天津",
+      "pinyin": "tianjin",
+      "short_domain": "tjca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://tjca.miit.gov.cn/bsfw/bszn/art/2020/art_c7e5abc3b201470287ddb6705f832655.html",
+      "license_hotline": "022-58920590",
+      "pilot_foreign_100": false,
+      "_note": "完整指南：7 条件 + 10 材料 + 60日时限 + 联系电话"
+    },
+    {
+      "name_zh": "河北",
+      "pinyin": "hebei",
+      "short_domain": "hbca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://hbca.miit.gov.cn/bsfw/bszn/art/2021/art_178857115e304bd2b8d89e9b51ce1ac5.html",
+      "license_hotline": "0311-86693334",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "山西",
+      "pinyin": "shanxi",
+      "short_domain": "sxca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://sxca.miit.gov.cn/bsfw/bszn/art/2015/art_612e5cd7da6747b6b98a3bad7237c76e.html",
+      "license_hotline": "0351-8788059",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "内蒙古",
+      "pinyin": "neimenggu",
+      "short_domain": "nmca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://nmca.miit.gov.cn/bsfw/bszn/art/2023/art_488bd6f65aea4474a6e4d85938a0de2b.html",
+      "license_hotline": "0471-6684170",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "辽宁",
+      "pinyin": "liaoning",
+      "short_domain": "lnca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://lnca.miit.gov.cn/bsfw/bszn/art/2020/art_0b6eead8d64145a7955471539ea0827c.html",
+      "license_hotline": "024-86581138",
+      "license_hotline_extra": "大连、丹东、营口：0411-84368030",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "吉林",
+      "pinyin": "jilin",
+      "short_domain": "jlca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://jlca.miit.gov.cn/bsfw/bszn/art/2018/art_406d449ea0434147917297c358afa9f5.html",
+      "license_hotline": "0431-82006727",
+      "pilot_foreign_100": false,
+      "_note": "完整指南：7 条件 + 9 材料 + 60日时限 + 联系电话"
+    },
+    {
+      "name_zh": "黑龙江",
+      "pinyin": "heilongjiang",
+      "short_domain": "hljca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://hljca.miit.gov.cn/bsfw/bszn/art/2023/art_432d08d3362c48d8904ce25923419d72.html",
+      "license_hotline": "0451-53005815",
+      "license_hotline_extra": "53005823",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "上海",
+      "pinyin": "shanghai",
+      "short_domain": "shca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "http://shca.miit.gov.cn/cms_files/filemanager/oldfile/shca/uploads/1/file/public/201803/20180313095133_uiycbm.pdf",
+      "license_hotline": "021-63905098",
+      "pilot_foreign_100": true,
+      "_note": "上海官网未发布独立'首次申请'办事指南HTML页；只有PDF《许可证申请条件》。采集时需用 PDF 文本提取。"
+    },
+    {
+      "name_zh": "江苏",
+      "pinyin": "jiangsu",
+      "short_domain": "jsca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://jsca.miit.gov.cn/zwgk/zfxxgkzl/fdzdgknr/art/2020/art_acf098761cf240d1820107bba88b8617.html",
+      "license_hotline": "025-83666303",
+      "license_hotline_extra": "83666309",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "浙江",
+      "pinyin": "zhejiang",
+      "short_domain": "zjca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://zjca.miit.gov.cn/bsfw/bszn/dxywjyxk/art/2020/art_a734e749a9ee43c7b7401614c78a041a.html",
+      "license_hotline": "0571-87880010",
+      "license_hotline_extra": "87880012",
+      "pilot_foreign_100": true
+    },
+    {
+      "name_zh": "安徽",
+      "pinyin": "anhui",
+      "short_domain": "ahca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://ahca.miit.gov.cn/xxgk/jgdj/art/2024/art_e0a2f416cb2e4f4f8acfdf340d54210e.html",
+      "license_hotline": "0551-65680867",
+      "pilot_foreign_100": false,
+      "_note": "安徽未搜到独立'首次申请'办事指南HTML；此页是'为企业办实事清单'，含'增值电信业务经营许可的申请'材料清单（3项）"
+    },
+    {
+      "name_zh": "福建",
+      "pinyin": "fujian",
+      "short_domain": "fjca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://fjca.miit.gov.cn/bsfw/bszn/art/2020/art_efbe2f83959d4a379dc0242efbd87e66.html",
+      "license_hotline": "0591-83175175",
+      "license_hotline_extra": "厦门：0592-5101578",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "江西",
+      "pinyin": "jiangxi",
+      "short_domain": "jxca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://jxca.miit.gov.cn/bsfw/bszn/dxywjyxk/art/2020/art_515630190655463192a07f39767e479d.html",
+      "license_hotline": "0791-86218176",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "山东",
+      "pinyin": "shandong",
+      "short_domain": "sdca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://sdca.miit.gov.cn/bsfw/bszn/art/2020/art_ea60b0f5024743429099ec6e32970854.html",
+      "license_hotline": "0531-86080907",
+      "license_hotline_extra": "青岛、威海、日照：0532-83891813",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "河南",
+      "pinyin": "henan",
+      "short_domain": "haca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": null,
+      "license_hotline": "0371-65569615",
+      "pilot_foreign_100": false,
+      "_note": "河南通管局官网 bsfw/bszn 列表页是动态 JS 加载，curl 拿不到内容；google site 搜不到 haca.miit.gov.cn 下独立的'首次申请'指南页（只有第三方转载）；执行标准与全国其他省一致（工信部 42 号令 第六条）"
+    },
+    {
+      "name_zh": "湖北",
+      "pinyin": "hubei",
+      "short_domain": "hubca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://hubca.miit.gov.cn/bsfw/bszn/art/2020/art_7c7220cd48fd40d29ccbf801359b64db.html",
+      "license_hotline": "027-87796369",
+      "pilot_foreign_100": false,
+      "_note": "正确入口：'申请湖北省内增值电信业务许可证指南'；之前 URL 是常见问题解答页"
+    },
+    {
+      "name_zh": "湖南",
+      "pinyin": "hunan",
+      "short_domain": "hunca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://hunca.miit.gov.cn/bsfw/bszn/art/2022/art_9d64d0d1ac4a4a93800c026e8f24a75d.html",
+      "license_hotline": "0731-81111266",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "广东",
+      "pinyin": "guangdong",
+      "short_domain": "gdca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://gdca.miit.gov.cn/bsfw/bszn/jyxk/tzgg/art/2025/art_9802f0eeae4647b5bc22a6af33ae0bf7.html",
+      "license_hotline": "020-87626826",
+      "license_hotline_extra": "87626816；深圳、惠州：0755-83522122",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "广西",
+      "pinyin": "guangxi",
+      "short_domain": "gxca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://gxca.miit.gov.cn/zwgk/dxhhlwgl/art/2026/art_104dbc673a4d4fb99957b756afcfc146.html",
+      "license_hotline": "0771-2628411",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "海南",
+      "pinyin": "hainan",
+      "short_domain": "hnca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://hnca.miit.gov.cn/bsfw/bszn/art/2020/art_0b7b63c35dfe4026a9110a538beb5a3c.html",
+      "license_hotline": "0898-65203155",
+      "pilot_foreign_100": true
+    },
+    {
+      "name_zh": "重庆",
+      "pinyin": "chongqing",
+      "short_domain": "cqca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://cqca.miit.gov.cn/bsfw/bszn/art/2021/art_f7ea0ec50e2e4489bd34ede7d0109e7a.html",
+      "license_hotline": "023-68573892",
+      "pilot_foreign_100": false,
+      "_note": "重庆通管局页面只是'渝快办'平台跳转链接（http://zwykb.cq.gov.cn/...），原平台链接已 404；执行标准依据工信部 42 号令 第六条（与全国其他省一致）"
+    },
+    {
+      "name_zh": "四川",
+      "pinyin": "sichuan",
+      "short_domain": "scca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": null,
+      "license_hotline": "028-87012572",
+      "pilot_foreign_100": false,
+      "_note": "未在官网搜到独立的'首次申请'办事指南页；只搜到'外资'和'变更'页。可引导用户走工信部统一入口 ythzxfw.miit.gov.cn 提交申请。"
+    },
+    {
+      "name_zh": "贵州",
+      "pinyin": "guizhou",
+      "short_domain": "gzca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://gzca.miit.gov.cn/bsfw/bszn/art/2025/art_e616fa4c61014a4cb808db20569471ef.html",
+      "license_hotline": "0851-85608887",
+      "license_hotline_extra": "88131571",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "云南",
+      "pinyin": "yunnan",
+      "short_domain": "ynca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://ynca.miit.gov.cn/bsfw/bszn/art/2025/art_02000408cb054e9dab691073b8bd4c9f.html",
+      "license_hotline": "0871-63555806",
+      "pilot_foreign_100": false,
+      "_note": "2025-06-05 新发布的'申请指南'页；变更页是 2025-10-13"
+    },
+    {
+      "name_zh": "西藏",
+      "pinyin": "xizang",
+      "short_domain": "xzca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://xzca.miit.gov.cn/bsfw/bszn/art/2017/art_fdf095ed61d84aaa8c90b7d9190e35bc.html",
+      "license_hotline": "0891-6390380",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "陕西",
+      "pinyin": "shaanxi",
+      "short_domain": "shxca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://shxca.miit.gov.cn/bsfw/xzxk/art/2020/art_5d3c5028bdb24f66a43100004e75dff9.html",
+      "license_hotline": "029-88333397",
+      "pilot_foreign_100": false,
+      "_note": "完整指南（'电信业务经营许可证申请'页）：7 条件 + 11 材料 + IDC/呼叫中心/网络托管 独立要求 + 5+30 日时限 + 029-88333397 + 5 个 doc 附件"
+    },
+    {
+      "name_zh": "甘肃",
+      "pinyin": "gansu",
+      "short_domain": "gsca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://gsca.miit.gov.cn/bsfw/bszn/art/2019/art_9e1b9da83652492e8ad16676a92a7ea2.html",
+      "license_hotline": "0931-8788991",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "青海",
+      "pinyin": "qinghai",
+      "short_domain": "qhca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://qhca.miit.gov.cn/bsfw/bszn/art/2020/art_520b883cc9e64ebc809461c55cbe64a7.html",
+      "license_hotline": "0971-8206720",
+      "pilot_foreign_100": false,
+      "_note": "青海通管局指南页只介绍经营许可/码号资源/互联网管理三大类，不含具体条件/材料；执行标准与全国其他省一致"
+    },
+    {
+      "name_zh": "宁夏",
+      "pinyin": "ningxia",
+      "short_domain": "nxca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://nxca.miit.gov.cn/bsfw/bszn/art/2019/art_3b8f45ce3d8a432293b9aff30d7b6b4a.html",
+      "license_hotline": "0951-5166889",
+      "pilot_foreign_100": false
+    },
+    {
+      "name_zh": "新疆",
+      "pinyin": "xinjiang",
+      "short_domain": "xjca.miit.gov.cn",
+      "main_entry": "https://ythzxfw.miit.gov.cn",
+      "market_entry": "https://dxzhgl.miit.gov.cn",
+      "guide_url": "https://xjca.miit.gov.cn/bsfw/zzdxyw/dxywjyxkzsq/bszn/art/2020/art_62c094d9868340d4bd1981c736816b4f.html",
+      "license_hotline": "0991-2388863",
+      "pilot_foreign_100": false
+    }
+  ]
+}
