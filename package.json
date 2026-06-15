@@ -1,0 +1,39 @@
+{
+  "name": "icp-edi-helper",
+  "version": "2.3.0",
+  "description": "企商链 Boss Claw 平台内置的 ICP/EDI 经营许可办理 SOP 技能包。覆盖 ICP/EDI 新业务申请、变更、续期全流程，支持企查查 API 自动评估。",
+  "main": "SKILL.md",
+  "keywords": [
+    "skill",
+    "agent",
+    "sales",
+    "government-service",
+    "icp-edi",
+    "bossclaw",
+    "franchise-enablement",
+    "sop-manual",
+    "qcc-api"
+  ],
+  "platforms": [
+    "bossclaw"
+  ],
+  "audience": [
+    "service-provider",
+    "franchisee",
+    "platform-admin"
+  ],
+  "files": {
+    "skill": "SKILL.md",
+    "agents": "AGENTS.md",
+    "readme": "README.md",
+    "examples": "examples/usage.md",
+    "workflow": "references/workflow.md",
+    "quality": "references/quality-checklist.md",
+    "errors": "references/error-handling.md"
+  },
+  "scripts": {
+    "validate": "scripts/validate-skill.sh"
+  },
+  "entry_decision_tree": "references/index.md (in original package)",
+  "license": "internal"
+}
