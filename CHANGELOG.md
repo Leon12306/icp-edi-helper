@@ -7,6 +7,32 @@
 
 ## [未发布]
 
+## [2.3] - 2026-06-15
+
+### Added
+- `AGENTS.md` AI 协作执行规则（任务识别 / 澄清策略 / 读写权限 / 汇报格式）
+- `package.json` 技能元数据（name / version / description / keywords / files / scripts）
+- `examples/usage.md` + `examples/edge-cases.md` 7 个用例样例（标准评估 / 跨省咨询 / 异常输入 / 客户误入 / 违规承诺 / API 降级 / 多省对比）
+- `references/workflow.md` 6 步法详细 + 加盟商话术规范 + 各省差异速览
+- `references/quality-checklist.md` Q1-Q18 结构完整性 + C1-C13 内容质量 + R1-R5 运行时质量
+- `references/error-handling.md` E1-E5 错误分级 + 典型场景处理 + 5 项错误提示模板
+- `references/qcc-api-guide.md` 企查查 API 鉴权 / 字段映射 / 错误降级
+- `scripts/validate-skill.sh` 26 项自动质量门禁（可接 CI）
+
+### Changed
+- `SKILL.md` 精简：223 行 → 116 行（-48%），长内容下沉到 references
+- `SKILL.md` 顶部加"📦 独立分发"说明
+- `README.md` 重写：加 v2.3 升级章节 + 快速启动 + 自包含分发说明
+- `references/index.md` 更新副本引用映射
+
+### Removed
+- `references/recovery.md` 删除（进度跟踪统一在交付汇报中，不写文件）
+- `output/` 副本目录概念（项目改为自包含、原地修改）
+- `*.bak*` 备份副本概念（修改前用 git/PR 流程管理）
+
+### Quality Gate
+- ✅ 26 PASS / 0 WARN / 0 FAIL
+
 ## [2.2] - 2026-06-09
 
 ### Changed
